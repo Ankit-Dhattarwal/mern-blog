@@ -1,6 +1,6 @@
-import { useDispatch, useSelector } from "react-redux";
-import { Alert, Button, Modal, TextInput } from "flowbite-react";
+import { Alert, Button, Modal, ModalBody, TextInput } from "flowbite-react";
 import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import {
   getDownloadURL,
   getStorage,
@@ -19,21 +19,22 @@ import {
   deleteUserFailure,
   signoutSuccess,
 } from "../redux/user/userSlice";
+import { useDispatch } from "react-redux";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
+import { Link } from "react-router-dom";
 
 export default function DashProfile() {
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser, error, loading } = useSelector((state) => state.user);
   const [imageFile, setImageFile] = useState(null);
   const [imageFileUrl, setImageFileUrl] = useState(null);
-  const filePickerRef = useRef();
   const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null);
-  const [imageFileUplaodError, setImageFileUploadError] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [imageFileUploadError, setImageFileUploadError] = useState(null);
   const [imageFileUploading, setImageFileUploading] = useState(false);
   const [updateUserSuccess, setUpdateUserSuccess] = useState(null);
   const [updateUserError, setUpdateUserError] = useState(null);
-  const [showModel, setShowModel] = useState(false);
-
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({});
+  const filePickerRef = useRef();
   const dispatch = useDispatch();
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -49,6 +50,16 @@ export default function DashProfile() {
   }, [imageFile]);
 
   const uploadImage = async () => {
+    // service firebase.storage {
+    //   match /b/{bucket}/o {
+    //     match /{allPaths=**} {
+    //       allow read;
+    //       allow write: if
+    //       request.resource.size < 2 * 1024 * 1024 &&
+    //       request.resource.contentType.matches('image/.*')
+    //     }
+    //   }
+    // }
     setImageFileUploading(true);
     setImageFileUploadError(null);
     const storage = getStorage(app);
@@ -60,6 +71,7 @@ export default function DashProfile() {
       (snapshot) => {
         const progress =
           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+
         setImageFileUploadProgress(progress.toFixed(0));
       },
       (error) => {
@@ -99,7 +111,7 @@ export default function DashProfile() {
     }
     try {
       dispatch(updateStart());
-      const res = await fetch(`/api/user/updates/${currentUser._id}`, {
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -114,14 +126,13 @@ export default function DashProfile() {
         dispatch(updateSuccess(data));
         setUpdateUserSuccess("User's profile updated successfully");
       }
-    } catch (e) {
-      dispatch(updateFailure(e.message));
-      setUpdateUserError(e.message);
+    } catch (error) {
+      dispatch(updateFailure(error.message));
+      setUpdateUserError(error.message);
     }
   };
-
   const handleDeleteUser = async () => {
-    setShowModel(false);
+    setShowModal(false);
     try {
       dispatch(deleteUserStart());
       const res = await fetch(`/api/user/delete/${currentUser._id}`, {
@@ -150,17 +161,16 @@ export default function DashProfile() {
         dispatch(signoutSuccess());
       }
     } catch (error) {
-      console.log(error);
+      console.log(error.message);
     }
   };
-
   return (
     <div className="max-w-lg mx-auto p-3 w-full">
       <h1 className="my-7 text-center font-semibold text-3xl">Profile</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           type="file"
-          accept="image/.*"
+          accept="image/*"
           onChange={handleImageChange}
           ref={filePickerRef}
           hidden
@@ -200,35 +210,51 @@ export default function DashProfile() {
             }`}
           />
         </div>
-        {imageFileUplaodError && (
-          <Alert color="failure">{imageFileUplaodError}</Alert>
+        {imageFileUploadError && (
+          <Alert color="failure">{imageFileUploadError}</Alert>
         )}
         <TextInput
           type="text"
           id="username"
           placeholder="username"
           defaultValue={currentUser.username}
-          onClick={handleChange}
+          onChange={handleChange}
         />
         <TextInput
           type="email"
           id="email"
-          placeholder="eamil"
+          placeholder="email"
           defaultValue={currentUser.email}
-          onClick={handleChange}
+          onChange={handleChange}
         />
         <TextInput
           type="password"
           id="password"
           placeholder="password"
-          onClick={handleChange}
+          onChange={handleChange}
         />
-        <Button type="submit" gradientDuoTone="purpleToBlue" outline>
-          Update
+        <Button
+          type="submit"
+          gradientDuoTone="purpleToBlue"
+          outline
+          disabled={loading || imageFileUploading}
+        >
+          {loading ? "Loading..." : "Update"}
         </Button>
+        {currentUser.isAdmin && (
+          <Link to={"/create-post"}>
+            <Button
+              type="button"
+              gradientDuoTone="purpleToPink"
+              className="w-full"
+            >
+              Create a post
+            </Button>
+          </Link>
+        )}
       </form>
-      <div className=" text-red-500 flex justify-between mt-5">
-        <span onClick={() => setShowModel(true)} className="cursor-pointer">
+      <div className="text-red-500 flex justify-between mt-5">
+        <span onClick={() => setShowModal(true)} className="cursor-pointer">
           Delete Account
         </span>
         <span onClick={handleSignout} className="cursor-pointer">
@@ -245,10 +271,14 @@ export default function DashProfile() {
           {updateUserError}
         </Alert>
       )}
-      {/* {error && <Alert color="failure">{error}</Alert>} */}
+      {error && (
+        <Alert color="failure" className="mt-5">
+          {error}
+        </Alert>
+      )}
       <Modal
-        show={showModel}
-        onClose={() => setShowModel(false)}
+        show={showModal}
+        onClose={() => setShowModal(false)}
         popup
         size="md"
       >
@@ -263,7 +293,7 @@ export default function DashProfile() {
               <Button color="failure" onClick={handleDeleteUser}>
                 Yes, I'm sure
               </Button>
-              <Button color="gray" onClick={() => setShowModel(false)}>
+              <Button color="gray" onClick={() => setShowModal(false)}>
                 No, cancel
               </Button>
             </div>
