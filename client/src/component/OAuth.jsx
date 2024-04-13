@@ -13,16 +13,15 @@ export default function OAuth() {
   const handleGoogleClick = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
-
     try {
-      const resultsFormGoogle = await signInWithPopup(auth, provider);
+      const resultsFromGoogle = await signInWithPopup(auth, provider);
       const res = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: resultsFormGoogle.user.displayName,
-          email: resultsFormGoogle.user.email,
-          googlePhotoUrl: resultsFormGoogle.user.photoURL,
+          name: resultsFromGoogle.user.displayName,
+          email: resultsFromGoogle.user.email,
+          googlePhotoUrl: resultsFromGoogle.user.photoURL,
         }),
       });
       const data = await res.json();
@@ -30,8 +29,8 @@ export default function OAuth() {
         dispatch(signInSuccess(data));
         navigate("/");
       }
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.log(error);
     }
   };
   return (
