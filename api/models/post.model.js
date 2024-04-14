@@ -16,8 +16,9 @@ const postSchema = new mongoose.Schema(
       unique: true,
     },
     image: {
-      type: 'String',
-      default: 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/2d78d141-1f64-44c8-976b-7321284e5147/dfjhhzd-4dd543ec-14f8-402a-9ca5-1c92d29de5b0.png',
+      type: String,
+      default:
+        'https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png',
     },
     category: {
       type: String,
@@ -27,10 +28,11 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-    }
-  }, {timestamps: true}
+    },
+  },
+  { timestamps: true }
 );
- 
+
 const Post = mongoose.model('Post', postSchema);
 
 export default Post;

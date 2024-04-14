@@ -20,7 +20,7 @@ import { errorHandler } from "../utils/error.js"
   })
   try{
     const savedPost = await newPost.save();
-    res.this.status(201).json(savedPost);
+    res.status(201).json(savedPost);
   }
   catch(err){
     next(err);
