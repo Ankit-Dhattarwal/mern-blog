@@ -8,6 +8,7 @@ import {
   signInFailure,
 } from "../redux/user/userSlice";
 import OAuth from "../component/OAuth";
+import logo from "../assets/Coder_Logo.png";
 
 export default function SignIn() {
   const [formData, setFormData] = useState({});
@@ -54,10 +55,11 @@ export default function SignIn() {
             to="/"
             className="font-bold text-4xl dark:text-white text-black"
           >
-            <span className="px-2 py-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg text-white">
-              Coder
-            </span>
-            Blog
+            <img
+              className="sm:w-40 w-30 sm:h-30 h-20 rounded-full"
+              src={logo}
+              alt="Logo.text"
+            />
           </Link>
           <p className="text-sm mt-5">
             This is a demo project. You can sign in with your email and password
